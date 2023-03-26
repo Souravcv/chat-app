@@ -1,36 +1,51 @@
-import 'package:chat_app/routs/app.rout.dart';
-import 'package:chat_app/views/auth.views.dart';
-import 'package:chat_app/views/home.views.dart';
-import 'package:chat_app/views/unknow.view.dart';
+import 'package:chat_app/helper/helper_function.dart';
+import 'package:chat_app/pages/homepage.dart';
+import 'package:chat_app/pages/auth/login_page.dart';
+import 'package:chat_app/shared.dart/constants.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
-void main() {
-  runApp(const MyApp());
+
+
+void main()async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp()); 
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      getPages: RouteView.values.map((e) {
-        switch (e) {
-          case RouteView.home:
-            return GetPage(name: "/${e.name}", page: () => HomeView());
-          case RouteView.home:
-            return GetPage(name: "/${e.name}", page: () => AuthView());
+  State<MyApp> createState() => _MyAppState();
+}
 
-          default:
-            return GetPage(name: "/${e.name}", page: () => UnknowView());
-        }
-      }).toList(),
-      initialRoute: RouteView.home.name,
+class _MyAppState extends State<MyApp> {
+  bool _isSignedIn = false;
+  @override
+  void initState() {
+    
+    super.initState();
+    getUserLoggedInStatus();
+      
+  }
+   getUserLoggedInStatus() async {
+    await HelperFunction.getUserLoggedInStatus().then((value) {
+      if (value != null) {
+        setState(() {
+          _isSignedIn = value;
+        });
+      }
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return  MaterialApp(
+      theme: ThemeData(primaryColor: Constante().prioritycolor,
+      scaffoldBackgroundColor: Colors.white
+      ),
+   home:_isSignedIn ? HomePage() : LoginPage(),
     );
   }
 }
