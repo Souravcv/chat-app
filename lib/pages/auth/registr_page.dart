@@ -175,7 +175,7 @@ class _RegistrPageState extends State<RegistrPage> {
         _isLoding = true;
       });
       await authService
-          .loginWithUserNameandPassword(fullname, email, password)
+          .registerUserWithEmailandPassword(fullname, email, password)
           .then((value)async {
         if (value == true) {
             // saving the shared preference state

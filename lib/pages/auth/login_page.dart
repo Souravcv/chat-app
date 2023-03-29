@@ -1,9 +1,14 @@
+import 'package:chat_app/helper/helper_function.dart';
 import 'package:chat_app/pages/auth/registr_page.dart';
+import 'package:chat_app/pages/homepage.dart';
+import 'package:chat_app/service/auth_service.dart';
+import 'package:chat_app/service/database_service.dart';
 import 'package:chat_app/widgets/widgets.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,13 +21,15 @@ class _LoginPageState extends State<LoginPage> {
   final formkey = GlobalKey<FormState>();
   String email = "";
   String password = "";
+  bool _isLoding = false;
+  AuthService authService = AuthService();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(
       //   backgroundColor: Theme.of(context).primaryColor,
       // ),
-      body: SingleChildScrollView(
+      body:_isLoding ? Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor,),) : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
           child: Form(
@@ -130,6 +137,36 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   login() async {
-    if (formkey.currentState!.validate()) {}
+   if (formkey.currentState!.validate()) {
+      setState(() {
+        _isLoding = true;
+      });
+      await authService
+          .loginWithUserNameandPassword(email, password)
+          .then((value)async {
+        if (value == true) {
+
+              QuerySnapshot snapshot =
+              await DatabaseService(uid: FirebaseAuth.instance.currentUser!.uid)
+                  .gettingUserData(email);
+          // saving the values to our shared preferences
+          await HelperFunction.saveUserLoggedInStatus(true);
+          await HelperFunction.saveUserEmailSF(email);
+          await HelperFunction.saveUserNameSF(snapshot.docs[0]['fullName']);
+          nextScreenReplace(context, const HomePage());
+          
+      
+       
+          nextScreenReplace(context, const HomePage());
+
+        }else{
+         showSnackbar(context,Colors.red,value);
+         setState(() {
+           _isLoding = false;
+         });
+        }
+      });
+    }
   }
 }
+ 

@@ -25,4 +25,14 @@ static Future<bool?>getUserLoggedInStatus () async {
   return sf.getBool(userLoggedInKey);
 }
 
+  static Future<String?> getUserEmailFromSF() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userEamilkey);
+  }
+
+  static Future<String?> getUserNameFromSF() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userNamekey);
+  }
 }
+
