@@ -11,9 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
-
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -33,6 +32,15 @@ class _HomePageState extends State<HomePage> {
     gettingUserData();
   }
 
+  // string manipulation
+  String getId(String res) {
+    return res.substring(0, res.indexOf("_"));
+  }
+
+  String getName(String res) {
+    return res.substring(res.indexOf("_") + 1);
+  }
+
   gettingUserData() async {
     await HelperFunction.getUserEmailFromSF().then((value) {
       setState(() {
@@ -44,7 +52,7 @@ class _HomePageState extends State<HomePage> {
         userName = val!;
       });
     });
-
+    // getting the list of snapshots in our stream
     await DatabaseService(uid: FirebaseAuth.instance.currentUser!.uid)
         .getUserGroups()
         .then((snapshot) {
@@ -54,141 +62,126 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // string manipulation
-  String getId(String res) {
-    return res.substring(0, res.indexOf("_"));
-  }
-
-  String getName(String res) {
-    return res.substring(res.indexOf("_") + 1);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 0,
         actions: [
           IconButton(
               onPressed: () {
-                nextScreen(context, SearchPage());
+                nextScreen(context, const SearchPage());
               },
-              icon: const Icon(Icons.search))
+              icon: const Icon(
+                Icons.search,
+              ))
         ],
+        elevation: 0,
         centerTitle: true,
+        backgroundColor: Theme.of(context).primaryColor,
         title: const Text(
-          "ChitChat",
+          "Groups",
           style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 27),
         ),
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 50),
-          children: <Widget>[
-            Icon(
-              Icons.account_circle,
-              size: 150,
-              color: Colors.grey[700],
+          child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 50),
+        children: <Widget>[
+          Icon(
+            Icons.account_circle,
+            size: 150,
+            color: Colors.grey[700],
+          ),
+          const SizedBox(
+            height: 15,
+          ),
+          Text(
+            userName,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          const Divider(
+            height: 2,
+          ),
+          ListTile(
+            onTap: () {},
+            selectedColor: Theme.of(context).primaryColor,
+            selected: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            leading: const Icon(Icons.group),
+            title: const Text(
+              "Groups",
+              style: TextStyle(color: Colors.black),
             ),
-            SizedBox(
-              height: 15,
+          ),
+          ListTile(
+            onTap: () {
+              nextScreenReplace(
+                  context,
+                  ProfilePage(
+                    userName: userName,
+                    email: email,
+                  ));
+            },
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            leading: const Icon(Icons.group),
+            title: const Text(
+              "Profile",
+              style: TextStyle(color: Colors.black),
             ),
-            Text(
-              userName,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          ListTile(
+            onTap: () async {
+              showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text("Logout"),
+                      content: const Text("Are you sure you want to logout?"),
+                      actions: [
+                        IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: const Icon(
+                            Icons.cancel,
+                            color: Colors.red,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            await authService.signOut();
+                            Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginPage()),
+                                (route) => false);
+                          },
+                          icon: const Icon(
+                            Icons.done,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    );
+                  });
+            },
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text(
+              "Logout",
+              style: TextStyle(color: Colors.black),
             ),
-            const SizedBox(
-              height: 30,
-            ),
-            const Divider(
-              height: 2,
-            ),
-            ListTile(
-              onTap: () {
-                nextScreen(context, HomePage());
-              },
-              selectedColor: Theme.of(context).primaryColor,
-              selected: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              leading: const Icon(Icons.group),
-              title: const Text(
-                "Groups",
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-            ListTile(
-              onTap: () {
-                nextScreen(
-                    context,
-                    ProfilePage(
-                      email: email,
-                      userName: userName,
-                    ));
-              },
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              leading: const Icon(Icons.group),
-              title: const Text(
-                "Profile",
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-            ListTile(
-              onTap: () async {
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      return StatefulBuilder(builder: ((context, setState) {
-                        return AlertDialog(
-                          title: Text("Logout"),
-                          content: Text("Are you sure you want to logout?"),
-                          actions: [
-                            IconButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              icon: const Icon(
-                                Icons.cancel,
-                                color: Colors.red,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () async {
-                                await authService.signOut();
-                                Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginPage()),
-                                    (route) => false);
-                              },
-                              icon: const Icon(
-                                Icons.done,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        );
-                      }));
-                    });
-                // authService.signOut().whenComplete(() {
-                //   nextScreen(context,LoginPage());
-                // });
-              },
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-              leading: const Icon(Icons.exit_to_app),
-              title: const Text(
-                "Logut",
-                style: TextStyle(color: Colors.black),
-              ),
-            )
-          ],
-        ),
-      ),
+          )
+        ],
+      )),
       body: groupList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -202,41 +195,6 @@ class _HomePageState extends State<HomePage> {
           size: 30,
         ),
       ),
-    );
-  }
-
-  groupList() {
-    return StreamBuilder(
-      stream: groups,
-      builder: (context, AsyncSnapshot snapshot) {
-        // make some checks
-        if (snapshot.hasData) {
-          if (snapshot.data['groups'] != null) {
-            if (snapshot.data['groups'].length != 0) {
-              return ListView.builder(
-                  itemCount: snapshot.data["groups"].length,
-                  itemBuilder: (context, Index) {
-                    
-                    int reverseIntex = snapshot.data["groups"].length - Index -1;
-                    GroupTile(
-                        
-                        groupId: getId(snapshot.data["groups"][reverseIntex]),
-                        groupName: getName(snapshot.data["groups"][reverseIntex]),
-                        userName: snapshot.data["fullName"]);
-                  });
-            } else {
-              return noGroupWidget();
-            }
-          } else {
-            return noGroupWidget();
-          }
-        } else {
-          return Center(
-            child: CircularProgressIndicator(
-                color: Theme.of(context).primaryColor),
-          );
-        }
-      },
     );
   }
 
@@ -317,6 +275,40 @@ class _HomePageState extends State<HomePage> {
             );
           }));
         });
+  }
+
+  groupList() {
+    return StreamBuilder(
+      stream: groups,
+      builder: (context, AsyncSnapshot snapshot) {
+        // make some checks
+        if (snapshot.hasData) {
+          if (snapshot.data['groups'] != null) {
+            if (snapshot.data['groups'].length != 0) {
+              return ListView.builder(
+                itemCount: snapshot.data['groups'].length,
+                itemBuilder: (context, index) {
+                  int reverseIndex = snapshot.data['groups'].length - index - 1;
+                  return GroupTile(
+                      groupId: getId(snapshot.data['groups'][reverseIndex]),
+                      groupName: getName(snapshot.data['groups'][reverseIndex]),
+                      userName: snapshot.data['fullName']);
+                },
+              );
+            } else {
+              return noGroupWidget();
+            }
+          } else {
+            return noGroupWidget();
+          }
+        } else {
+          return Center(
+            child: CircularProgressIndicator(
+                color: Theme.of(context).primaryColor),
+          );
+        }
+      },
+    );
   }
 
   noGroupWidget() {
